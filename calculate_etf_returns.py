@@ -2,8 +2,9 @@ import pandas as pd
 import numpy as np
 import os
 
-def calculate_returns(df):
+def calculate_returns(df1):
     # 수익률 계산 함수
+    df = df1.copy()
     def calculate_return(column, months):
         return df[column] / df[column].shift(months) - 1
 

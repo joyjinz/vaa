@@ -10,6 +10,7 @@ def calculate_etf_performance(df1, df2):
     df1['YearMonth'] = pd.to_datetime(df1['YearMonth'])
     df2['YearMonth'] = pd.to_datetime(df2['YearMonth'])
 
+    # YearMonth를 인덱스로 설정
     df1.set_index('YearMonth', inplace=True)
     df2.set_index('YearMonth', inplace=True)
 
@@ -18,31 +19,31 @@ def calculate_etf_performance(df1, df2):
     for i in range(1, 16):
         for period in ['front', 'back']:
             col_key = f"{period}_{i}"
-            return_list = []
+            returns = {}
 
             for ym in df2.index:
                 next_month = ym + pd.DateOffset(months=1)
-
                 if next_month not in df1.index:
                     continue
 
                 etf = df2.loc[ym, f"{col_key}_select"]
-                price_col_current = f"{etf}_{col_key}"
-                price_col_next = f"{etf}_{col_key}"
+                price_col = f"{etf}_{col_key}"
 
                 try:
-                    price_current = df1.loc[ym, price_col_current]
-                    price_next = df1.loc[next_month, price_col_next]
+                    price_current = df1.loc[ym, price_col]
+                    price_next = df1.loc[next_month, price_col]
                     ret = (price_next - price_current) / price_current
-                    return_list.append(ret)
+                    returns[ym] = ret
                 except KeyError:
                     continue
+                except Exception:
+                    continue
 
-            # 수익률 저장
-            result[f"{col_key}"] = return_list
+            result[col_key] = pd.Series(returns)
 
+    # 결과 DataFrame 생성
     result_df = pd.DataFrame(result)
-
+    result_df.index.name = 'YearMonth'
     # 1. 월별 수익률 저장
     output_file = 'etf_result.csv'
     if os.path.exists(output_file):
@@ -63,7 +64,7 @@ def calculate_etf_performance(df1, df2):
         if len(data) == 0:
             continue
         
-        # 누적 수익률 기반 계산 (수정됨)
+        # 누적 수익률 기반 계산
         cumulative = (1 + data).cumprod()
         total_return = cumulative.iloc[-1] - 1  # 최종 누적 수익률
         monthly_return = data.mean()
@@ -84,17 +85,17 @@ def calculate_etf_performance(df1, df2):
 
     # 출력
     pd.set_option('display.float_format', '{:.4%}'.format)
-    print("\n🔍 전략별 성과 비교:")
-    print(stats_df.sort_values(by='total_return', ascending=False))
+    # print("\n🔍 전략별 성과 비교:")
+    # print(stats_df.sort_values(by='total_return', ascending=False))
 
     # 최고 수익률 출력
     best_row = stats_df.loc[stats_df['total_return'].idxmax()]
-    print("\n📈 최고 수익률 전략:")
-    print(f"전략명: {best_row['column']}")
-    print(f"총 누적 수익률: {best_row['total_return']:.2%}")
-    print(f"연평균 수익률: {best_row['annual_return']:.2%}")
-
+    # print("\n📈 최고 수익률 전략:")
+    # print(f"전략명: {best_row['column']}")
+    # print(f"총 누적 수익률: {best_row['total_return']:.2%}")
+    # print(f"연평균 수익률: {best_row['annual_return']:.2%}")
+    return best_row['column'], best_row['total_return'], best_row['annual_return']
     # 파일 저장 정보 출력
-    print(f"\n✅ 저장된 파일:")
-    print(f"- 월별 수익률: {output_file}")
-    print(f"- 누적 수익률: {cumulative_file}")
+    # print(f"\n✅ 저장된 파일:")
+    # print(f"- 월별 수익률: {output_file}")
+    # print(f"- 누적 수익률: {cumulative_file}")

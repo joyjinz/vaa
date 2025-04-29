@@ -53,7 +53,6 @@ def rebuild_etf_data(df_close: pd.DataFrame, filename='etf_rebuild.csv') -> pd.D
     if os.path.exists(filename):
         os.remove(filename)
 
-    # CSV 저장
     result_df.to_csv(filename, index=False)
 
     return result_df
