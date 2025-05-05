@@ -8,7 +8,7 @@ import itertools
 import multiprocessing as mp
 import csv
 from tqdm import tqdm
-
+#
 def process_combination(params):
     try:
         score = calc_etf_momentum_score(calculate_close, params)
